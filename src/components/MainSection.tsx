@@ -109,7 +109,7 @@ export const MainSection = ({ mainRef }: MainSectionType) => {
     return (
         <main
             ref={mainRef}
-            className="flex-grow container mx-auto px-4 py-16 scroll-mt-16"
+            className="h-screen flex justify-center items-center bg-gradient-to-br from-red-50 to-slate-100 px-4 py-16 scroll-mt-16"
         >
             <Card className="w-full max-w-3xl mx-auto shadow-xl border-2 border-slate-200 dark:border-slate-700">
                 <CardHeader className="text-center rounded-t-lg">

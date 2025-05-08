@@ -1,5 +1,4 @@
-import type React from "react";
-
+import toast, { Toaster } from "react-hot-toast";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -225,20 +224,6 @@ export default function ChatroomPage() {
                         </span>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                        <Bookmark className="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                        <Share2 className="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                        <Settings className="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                        <HelpCircle className="h-5 w-5" />
-                    </Button>
-                </div>
             </header>
 
             {/* Main Content - Takes remaining height */}
@@ -288,7 +273,7 @@ export default function ChatroomPage() {
                                     {videoInfo?.title}
                                 </h2>
                                 <Separator className="my-4" />
-                                <p className="text-slate-700 dark:text-slate-300">
+                                <p className="whitespace-pre-line text-slate-700 dark:text-slate-300">
                                     {videoInfo?.description}
                                 </p>
                             </TabsContent>
@@ -400,6 +385,14 @@ export default function ChatroomPage() {
                                                                         variant="ghost"
                                                                         size="icon"
                                                                         className="h-6 w-6"
+                                                                        onClick={() => {
+                                                                            navigator.clipboard.writeText(
+                                                                                msg.content
+                                                                            );
+                                                                            toast.success(
+                                                                                "Copied"
+                                                                            );
+                                                                        }}
                                                                     >
                                                                         <Copy className="h-3 w-3" />
                                                                     </Button>
@@ -456,6 +449,7 @@ export default function ChatroomPage() {
                     </div>
                 </div>
             </div>
+            <Toaster />
         </div>
     );
 }

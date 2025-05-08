@@ -1,12 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-    Youtube,
-    ArrowLeft,
-    Bookmark,
-    Share2,
-    Settings,
-    HelpCircle,
-} from "lucide-react";
+import { Youtube, ArrowLeft } from "lucide-react";
 
 export default function ChatHeader() {
     return (
@@ -22,20 +15,6 @@ export default function ChatHeader() {
                     <Youtube className="h-5 w-5 text-red-600" />
                     <span className="font-semibold text-lg">YoutubeGPT</span>
                 </div>
-            </div>
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" aria-label="Bookmark">
-                    <Bookmark className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" aria-label="Share">
-                    <Share2 className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" aria-label="Settings">
-                    <Settings className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" aria-label="Help">
-                    <HelpCircle className="h-5 w-5" />
-                </Button>
             </div>
         </header>
     );

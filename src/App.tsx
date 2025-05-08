@@ -5,11 +5,6 @@ import { Footer } from "./components/Footer";
 import { Chatrooms } from "./components/Chatrooms";
 import axios from "axios";
 
-const fetchChatrooms = async () => {
-    const result = await axios.get("http://localhost:8000/api/chatrooms");
-    console.log(result.data);
-};
-
 type ChatRoom = {
     id: string;
     title: string;
@@ -17,7 +12,14 @@ type ChatRoom = {
 
 export default function App() {
     const [chatrooms, setChatRooms] = useState<ChatRoom[]>();
-    useEffect(() => {}, []);
+    const fetchChatrooms = async () => {
+        const result = await axios.get("http://localhost:8000/api/chatrooms");
+        setChatRooms(result.data);
+    };
+
+    useEffect(() => {
+        fetchChatrooms();
+    }, []);
     const mainSectionRef = useRef<HTMLDivElement>(null);
     const scrollToMain = () => {
         mainSectionRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -28,9 +30,9 @@ export default function App() {
             {/* Hero Section */}
             <HeroSection scrollToMain={scrollToMain} />
             {/* Main Content */}
+            {chatrooms && <Chatrooms videos={chatrooms} />}
             <MainSection mainRef={mainSectionRef} />
             {/* Footer Section */}
-            <Chatrooms videos={[]} />
             <Footer />
         </div>
     );
