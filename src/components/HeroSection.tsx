@@ -7,7 +7,7 @@ type HeroSectionType = {
 
 export const HeroSection = ({ scrollToMain }: HeroSectionType) => {
     return (
-        <div className="bg-gradient-to-br from-red-50 to-slate-100 dark:from-slate-900 dark:to-red-950">
+        <div className="h-screen bg-gradient-to-br from-red-50 to-slate-100 dark:from-slate-900 dark:to-red-950">
             <div className="container mx-auto px-4 py-16 md:py-24">
                 <div className="flex flex-col md:flex-row items-center gap-8">
                     <div className="flex-1 space-y-6">
@@ -61,7 +61,7 @@ export const HeroSection = ({ scrollToMain }: HeroSectionType) => {
                     </div>
                 </div>
 
-                <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="mt-48 grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-200 dark:border-slate-700">
                         <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
                             <Youtube className="h-6 w-6 text-red-600" />

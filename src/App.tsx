@@ -30,7 +30,9 @@ export default function App() {
             {/* Hero Section */}
             <HeroSection scrollToMain={scrollToMain} />
             {/* Main Content */}
-            {chatrooms && <Chatrooms videos={chatrooms} />}
+            {chatrooms && chatrooms.length > 0 && (
+                <Chatrooms videos={chatrooms} setVideos={setChatRooms} />
+            )}
             <MainSection mainRef={mainSectionRef} />
             {/* Footer Section */}
             <Footer />

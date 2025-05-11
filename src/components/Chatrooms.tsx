@@ -1,6 +1,20 @@
 import { useNavigate } from "react-router";
 import { Card, CardFooter } from "@/components/ui/card";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Trash2 } from "lucide-react";
+import axios from "axios";
+import { useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type ChatRoom = {
     id: string;
@@ -9,10 +23,42 @@ type ChatRoom = {
 
 type ChatroomProps = {
     videos: ChatRoom[];
+    setVideos: React.Dispatch<React.SetStateAction<ChatRoom[] | undefined>>;
 };
 
-export const Chatrooms = ({ videos }: ChatroomProps) => {
+export const Chatrooms = ({ videos, setVideos }: ChatroomProps) => {
     const navigate = useNavigate();
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [openAlertId, setOpenAlertId] = useState<string | null>(null);
+
+    const handleDelete = async (videoId: string) => {
+        setDeletingId(videoId);
+
+        // Create a loading toast that we can dismiss later
+        const loadingToastId = toast.loading("Deleting chatroom...");
+
+        try {
+            await axios.delete(
+                `http://localhost:8000/api/chatrooms/${videoId}`
+            );
+
+            // Remove from state
+            setVideos(videos.filter((v) => v.id !== videoId));
+
+            // Show success toast and dismiss the loading toast
+            toast.success("Chatroom successfully deleted", {
+                id: loadingToastId,
+            });
+        } catch (err) {
+            console.error("Failed to delete:", err);
+
+            // Show error toast and dismiss the loading toast
+            toast.error("Failed to delete chatroom", { id: loadingToastId });
+        } finally {
+            setDeletingId(null);
+            setOpenAlertId(null);
+        }
+    };
 
     return (
         <div className="h-screen mx-auto container px-12 py-12 bg-pink">
@@ -24,10 +70,66 @@ export const Chatrooms = ({ videos }: ChatroomProps) => {
                 {videos.map((video) => (
                     <Card
                         key={video.id}
-                        className="overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer group"
-                        onClick={() => navigate(`/v/${video.id}`)}
+                        className="overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer group relative"
                     >
-                        <div className="relative aspect-video">
+                        {/* Delete Button with Alert Dialog */}
+                        <AlertDialog
+                            open={openAlertId === video.id}
+                            onOpenChange={(open) => {
+                                if (!open) setOpenAlertId(null);
+                            }}
+                        >
+                            <AlertDialogTrigger asChild>
+                                <button
+                                    className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all duration-200"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenAlertId(video.id);
+                                    }}
+                                >
+                                    <Trash2 className="w-4 h-4 text-white" />
+                                </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Delete Chatroom
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Are you sure you want to delete "
+                                        {video.title}"? This action cannot be
+                                        undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() => handleDelete(video.id)}
+                                        disabled={deletingId === video.id}
+                                        className="bg-red-600 hover:bg-red-700"
+                                    >
+                                        {deletingId === video.id ? (
+                                            <>
+                                                <span className="animate-spin mr-2">
+                                                    ⏳
+                                                </span>
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            "Delete"
+                                        )}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+
+                        {/* Video Thumbnail */}
+                        <div
+                            className="relative aspect-video"
+                            onClick={() => navigate(`/v/${video.id}`)}
+                        >
                             <img
                                 src={`https://img.youtube.com/vi/${video.id}/0.jpg`}
                                 alt={video.title}
@@ -46,6 +148,33 @@ export const Chatrooms = ({ videos }: ChatroomProps) => {
                     </Card>
                 ))}
             </div>
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    // Default options for all toasts
+                    duration: 4000,
+                    style: {
+                        background: "#363636",
+                        color: "#fff",
+                    },
+                    // Custom success toast styling
+                    success: {
+                        duration: 3000,
+                        iconTheme: {
+                            primary: "#10B981",
+                            secondary: "white",
+                        },
+                    },
+                    // Custom error toast styling
+                    error: {
+                        duration: 4000,
+                        iconTheme: {
+                            primary: "#EF4444",
+                            secondary: "white",
+                        },
+                    },
+                }}
+            />
         </div>
     );
 };

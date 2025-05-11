@@ -13,15 +13,13 @@ import {
     ArrowLeft,
     Book,
     Info,
-    Bookmark,
-    Share2,
-    Settings,
-    HelpCircle,
     RotateCcw,
+    Lightbulb,
 } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type ChatRoomInfo = {
     id: string;
@@ -29,6 +27,7 @@ type ChatRoomInfo = {
     title: string;
     transcript: string;
     description: string;
+    summary: string;
     transcript_wts: Array<TranscriptWTS>;
 };
 
@@ -39,14 +38,15 @@ type TranscriptWTS = {
 };
 
 interface Message {
-    id: number;
-    role: string;
+    id: string;
+    vid_id: string;
+    sent_by: string;
     content: string;
-    timestamp: Date;
+    created_at: Date;
 }
 
 const embedUrl = (vidId: string | undefined) => {
-    return "https://www.youtube.com/embed/" + vidId;
+    return "https://www.youtube.com/embed/" + vidId + "?enablejsapi=1";
 };
 
 const formatStart = (seconds: number) => {
@@ -89,36 +89,38 @@ export default function ChatroomPage() {
             const response = await axios.get(
                 `http://localhost:8000/api/chatrooms/${params.vidId}`
             );
-            setvideoInfo(response.data);
+            setvideoInfo(response.data["vid_chat"]);
+            setMessages(response.data["messages"]);
         };
         fetchChatroomInfo();
     }, []);
 
     const handleSendMessage = async () => {
         if (!message.trim()) return;
-
-        // Add user message
+        if (!params.vidId) return;
+        // Create user message object
         const userMessage = {
-            id: messages.length + 1,
-            role: "user",
+            id: `user_${Date.now()}`,
+            vid_id: params.vidId, // Add video ID to match backend model
+            sent_by: "user", // Matches MessageSender.USER enum
             content: message,
-            timestamp: new Date(),
+            created_at: new Date(),
         };
 
-        setMessages([...messages, userMessage]);
+        // Optimistically add user message
+        setMessages((prev) => [...prev, userMessage]);
         setMessage("");
 
-        // Create a placeholder for the AI response
-        const aiMessageId = messages.length + 2;
-        const aiMessage = {
-            id: aiMessageId,
-            role: "assistant",
+        // Create empty bot message placeholder
+        const botMessage = {
+            id: `bot_${Date.now()}`,
+            vid_id: params.vidId, // Add video ID to match backend model
+            sent_by: "bot", // Matches MessageSender.BOT enum
             content: "",
-            timestamp: new Date(),
+            created_at: new Date(),
         };
 
-        // Add empty AI message that will be updated with streaming content
-        setMessages((prev) => [...prev, aiMessage]);
+        setMessages((prev) => [...prev, botMessage]);
 
         const controller = new AbortController();
 
@@ -131,7 +133,7 @@ export default function ChatroomPage() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        query: userMessage.content,
+                        query: message, // Send just the raw message
                     }),
                     signal: controller.signal,
                 }
@@ -141,13 +143,10 @@ export default function ChatroomPage() {
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
 
+            // Handle streaming response
             const reader = res.body?.getReader();
+            if (!reader) return;
             const decoder = new TextDecoder();
-
-            if (!reader) {
-                throw new Error("Response body is null");
-            }
-
             let accumulatedContent = "";
 
             while (true) {
@@ -157,34 +156,34 @@ export default function ChatroomPage() {
                 const chunk = decoder.decode(value, { stream: true });
                 accumulatedContent += chunk;
 
-                // Update the AI message with the accumulated content
-                setMessages((prevMessages) =>
-                    prevMessages.map((msg) =>
-                        msg.id === aiMessageId
+                // Update bot message with streaming content
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === botMessage.id
                             ? { ...msg, content: accumulatedContent }
                             : msg
                     )
                 );
             }
         } catch (err) {
-            if ((err as Error).name === "AbortError") {
-                console.log("Fetch aborted");
-            } else {
-                console.error("Stream fetch error:", err);
-
-                // Update the AI message with an error
-                setMessages((prevMessages) =>
-                    prevMessages.map((msg) =>
-                        msg.id === aiMessageId
-                            ? {
-                                  ...msg,
-                                  content:
-                                      "Sorry, there was an error processing your request.",
-                              }
-                            : msg
-                    )
-                );
-            }
+            // Update bot message with error
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === botMessage.id
+                        ? {
+                              ...msg,
+                              content: "Error processing request",
+                              error:
+                                  err instanceof Error
+                                      ? err.message
+                                      : "Unknown error",
+                          }
+                        : msg
+                )
+            );
+            console.error("API Error:", err);
+        } finally {
+            controller.abort();
         }
     };
 
@@ -262,6 +261,13 @@ export default function ChatroomPage() {
                                         <Book />
                                         Transcript
                                     </TabsTrigger>
+                                    <TabsTrigger
+                                        value="summary"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Lightbulb />
+                                        Summary
+                                    </TabsTrigger>
                                 </TabsList>
                             </div>
 
@@ -300,6 +306,19 @@ export default function ChatroomPage() {
                                     ))}
                                 </div>
                             </TabsContent>
+                            <TabsContent
+                                value="summary"
+                                className="flex-1 overflow-auto p-4"
+                            >
+                                <h2 className="text-xl font-bold mb-4">
+                                    Overview
+                                </h2>
+                                <div className="space-y-4 whitespace-pre-line">
+                                    <Markdown remarkPlugins={[remarkGfm]}>
+                                        {videoInfo?.summary}
+                                    </Markdown>
+                                </div>
+                            </TabsContent>
                         </Tabs>
                     </div>
                 </div>
@@ -320,26 +339,26 @@ export default function ChatroomPage() {
                                             <div
                                                 key={msg.id}
                                                 className={`flex ${
-                                                    msg.role === "user"
+                                                    msg.sent_by === "user"
                                                         ? "justify-end"
                                                         : "justify-start"
                                                 }`}
                                             >
                                                 <div
                                                     className={`flex gap-3 max-w-[85%] ${
-                                                        msg.role === "user"
+                                                        msg.sent_by === "user"
                                                             ? "flex-row-reverse"
                                                             : ""
                                                     }`}
                                                 >
-                                                    {msg.role !== "user" && (
+                                                    {msg.sent_by !== "user" && (
                                                         <Avatar className="h-8 w-8 flex-shrink-0">
                                                             <AvatarFallback className="bg-red-100 text-red-600">
                                                                 AI
                                                             </AvatarFallback>
                                                         </Avatar>
                                                     )}
-                                                    {msg.role === "user" && (
+                                                    {msg.sent_by === "user" && (
                                                         <Avatar className="h-8 w-8 flex-shrink-0">
                                                             <AvatarFallback className="bg-blue-100 text-blue-600">
                                                                 U
@@ -348,24 +367,29 @@ export default function ChatroomPage() {
                                                     )}
                                                     <div
                                                         className={`space-y-1 ${
-                                                            msg.role === "user"
+                                                            msg.sent_by ===
+                                                            "user"
                                                                 ? "items-end"
                                                                 : ""
                                                         }`}
                                                     >
                                                         <div
                                                             className={`rounded-lg p-3 ${
-                                                                msg.role ===
+                                                                msg.sent_by ===
                                                                 "user"
                                                                     ? "bg-blue-100 dark:bg-blue-900/30 text-slate-800 dark:text-slate-100"
-                                                                    : msg.role ===
+                                                                    : msg.sent_by ===
                                                                       "system"
                                                                     ? "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100"
                                                                     : "bg-red-50 dark:bg-red-900/20 text-slate-800 dark:text-slate-100 border border-red-100 dark:border-red-900/30"
                                                             }`}
                                                         >
-                                                            <div className="whitespace-pre-wrap">
-                                                                <Markdown>
+                                                            <div className="whitespace-pre-line">
+                                                                <Markdown
+                                                                    remarkPlugins={[
+                                                                        remarkGfm,
+                                                                    ]}
+                                                                >
                                                                     {
                                                                         msg.content
                                                                     }
@@ -375,10 +399,12 @@ export default function ChatroomPage() {
                                                         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                                             <span>
                                                                 {formatTime(
-                                                                    msg.timestamp
+                                                                    new Date(
+                                                                        msg.created_at
+                                                                    )
                                                                 )}
                                                             </span>
-                                                            {msg.role ===
+                                                            {msg.sent_by ===
                                                                 "assistant" && (
                                                                 <div className="flex items-center gap-1">
                                                                     <Button
