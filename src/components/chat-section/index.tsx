@@ -20,6 +20,8 @@ import axios from "axios";
 import { useParams } from "react-router";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Linkify from "react-linkify";
+import YouTubePlayWrapper from "../YouTubePlayWrapper";
 
 type ChatRoomInfo = {
     id: string;
@@ -45,9 +47,25 @@ interface Message {
     created_at: Date;
 }
 
-const embedUrl = (vidId: string | undefined) => {
-    return "https://www.youtube.com/embed/" + vidId + "?enablejsapi=1";
+// const embedUrl = (vidId: string | undefined) => {
+//     // https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1&origin=http://example.com
+//     return `https://www.youtube.com/embed/${vidId}?autoplay=1&origin=http://localhost:5173?enablejsapi=1?rel=0`;
+// };
+
+const toSecond = (timestamp: string): number => {
+    return 0;
 };
+
+const componentDecorator = (href: string, text: string, key: number) => (
+    <a
+        href={href}
+        key={key}
+        target="_blank"
+        className="underline text-blue-600 hover:text-blue-800 visited:text-purple-600"
+    >
+        {text}
+    </a>
+);
 
 const formatStart = (seconds: number) => {
     const date = new Date(0);
@@ -59,6 +77,7 @@ export default function ChatroomPage() {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [videoInfo, setvideoInfo] = useState<ChatRoomInfo | null>(null);
+    const [seekTime, setSeekTime] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -232,10 +251,14 @@ export default function ChatroomPage() {
                     {/* Video Player - Fixed aspect ratio */}
                     <div className="relative bg-black aspect-video w-full flex-shrink-0">
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <iframe
-                                src={embedUrl(videoInfo?.id)}
-                                className="h-full w-full"
-                            ></iframe>
+                            {videoInfo && (
+                                <YouTubePlayWrapper
+                                    sourceId={videoInfo?.id}
+                                    seekTime={
+                                        seekTime > 0 ? seekTime : undefined
+                                    }
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -249,21 +272,21 @@ export default function ChatroomPage() {
                                 <TabsList className="flex gap-2 h-12">
                                     <TabsTrigger
                                         value="info"
-                                        className="flex items-center gap-2"
+                                        className="flex items-center gap-2 cursor-pointer"
                                     >
                                         <Info />
                                         Video Info
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="transcript"
-                                        className="flex items-center gap-2"
+                                        className="flex items-center gap-2 cursor-pointer"
                                     >
                                         <Book />
                                         Transcript
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="summary"
-                                        className="flex items-center gap-2"
+                                        className="flex items-center gap-2 cursor-pointer"
                                     >
                                         <Lightbulb />
                                         Summary
@@ -280,7 +303,11 @@ export default function ChatroomPage() {
                                 </h2>
                                 <Separator className="my-4" />
                                 <p className="whitespace-pre-line text-slate-700 dark:text-slate-300">
-                                    {videoInfo?.description}
+                                    <Linkify
+                                        componentDecorator={componentDecorator}
+                                    >
+                                        {videoInfo?.description}
+                                    </Linkify>
                                 </p>
                             </TabsContent>
                             <TabsContent
@@ -291,19 +318,28 @@ export default function ChatroomPage() {
                                     Video Transcript
                                 </h2>
                                 <div className="space-y-4">
-                                    {videoInfo?.transcript_wts.map((chunk) => (
-                                        <div
-                                            key={chunk.start}
-                                            className="space-y-1"
-                                        >
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                {formatStart(chunk.start)}
-                                            </p>
-                                            <p className="text-sm">
-                                                {chunk.text}
-                                            </p>
-                                        </div>
-                                    ))}
+                                    {videoInfo?.transcript_wts.map(
+                                        (chunk, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="space-y-1"
+                                            >
+                                                <p
+                                                    className="hover:text-red-700 cursor-pointer text-xs text-slate-500 dark:text-slate-400"
+                                                    onClick={() => {
+                                                        setSeekTime(
+                                                            chunk.start
+                                                        );
+                                                    }}
+                                                >
+                                                    {formatStart(chunk.start)}
+                                                </p>
+                                                <p className="text-sm">
+                                                    {chunk.text}
+                                                </p>
+                                            </div>
+                                        )
+                                    )}
                                 </div>
                             </TabsContent>
                             <TabsContent
@@ -313,9 +349,9 @@ export default function ChatroomPage() {
                                 <h2 className="text-xl font-bold mb-4">
                                     Overview
                                 </h2>
-                                <div className="space-y-4 whitespace-pre-line">
+                                <div className="space-y-4">
                                     <Markdown remarkPlugins={[remarkGfm]}>
-                                        {videoInfo?.summary}
+                                        {videoInfo?.summary.replace("\n", "")}
                                     </Markdown>
                                 </div>
                             </TabsContent>

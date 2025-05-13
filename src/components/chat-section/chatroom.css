@@ -1,0 +1,11 @@
+.description a {
+    color: #0000ee;
+}
+
+.description a:hover {
+    text-decoration: underline;
+}
+
+.description a:visited {
+    color: #551a8b;
+}
