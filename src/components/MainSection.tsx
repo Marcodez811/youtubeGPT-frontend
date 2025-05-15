@@ -10,8 +10,10 @@ import { PlaySquare, Youtube } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+// import { Switch } from "@/components/ui/switch";
+// import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router";
 
@@ -79,9 +81,11 @@ const isImageValid = async (url: string): Promise<boolean> => {
 
 export const MainSection = ({ mainRef }: MainSectionType) => {
     const [videoUrl, setVideoUrl] = useState("");
-    const [enhance, setEnhance] = useState(true);
+    // const [enhance, setEnhance] = useState(true);
     const [thumbnail, setThumbnail] = useState("");
     const [videoName, setVideoName] = useState("Fetching Video");
+    const [loading, setLoading] = useState(false);
+    const [typed, setTyped] = useState("");
     // const [playlistUrl, setPlaylistUrl] = useState("");
     const navigate = useNavigate();
 
@@ -151,7 +155,7 @@ export const MainSection = ({ mainRef }: MainSectionType) => {
                                         setVideoUrl(e.target.value);
                                     }}
                                 />
-                                <div className="flex flex-col items-center space-y-2">
+                                {/* <div className="flex flex-col items-center space-y-2">
                                     <div className="flex items-center space-x-2">
                                         <Switch
                                             checked={enhance}
@@ -169,21 +173,27 @@ export const MainSection = ({ mainRef }: MainSectionType) => {
                                         AI rewrites the transcript into
                                         accessable format
                                     </p>
-                                </div>
+                                </div> */}
                                 <div className="flex justify-center">
                                     <Button
                                         onClick={async () => {
-                                            const payload = {
-                                                url: videoUrl,
-                                                enhance,
-                                            };
-                                            const result = await axios.post(
-                                                "http://localhost:8000/api/chatrooms/",
-                                                payload
-                                            );
-                                            const chatroomData: Chatroom =
-                                                result.data;
-                                            navigate(`/v/${chatroomData.id}`);
+                                            setLoading(true);
+                                            try {
+                                                const payload = {
+                                                    url: videoUrl,
+                                                };
+                                                const result = await axios.post(
+                                                    "http://localhost:8000/api/chatrooms/",
+                                                    payload
+                                                );
+                                                const chatroomData: Chatroom =
+                                                    result.data;
+                                                navigate(
+                                                    `/v/${chatroomData.id}`
+                                                );
+                                            } finally {
+                                                setLoading(false);
+                                            }
                                         }}
                                         className="cursor-pointer bg-red-600 hover:bg-red-700 w-full sm:w-auto px-8"
                                         disabled={!validateURL(videoUrl)}
@@ -229,6 +239,36 @@ export const MainSection = ({ mainRef }: MainSectionType) => {
                     </Tabs>
                 </CardContent>
             </Card>
+            <Dialog open={loading}>
+                <DialogContent className="flex flex-col items-center gap-4 [&>button]:hidden">
+                    <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+                    <TypingText text="Creating chatroom..." speed={100} />
+                    <p className="font-bold"></p>
+                </DialogContent>
+            </Dialog>
         </main>
     );
 };
+
+function TypingText({ text, speed = 100 }: { text: string; speed: number }) {
+    const [displayedText, setDisplayedText] = useState("");
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        if (index < text.length) {
+            const timeout = setTimeout(() => {
+                setDisplayedText((prevText) => prevText + text[index]);
+                setIndex((prevIndex) => prevIndex + 1);
+            }, speed);
+            return () => clearTimeout(timeout);
+        } else {
+            const resetTimeout = setTimeout(() => {
+                setDisplayedText("");
+                setIndex(0);
+            }, speed * 10);
+            return () => clearTimeout(resetTimeout);
+        }
+    }, [index, text, speed]);
+
+    return <p className="font-bold">{displayedText}</p>;
+}

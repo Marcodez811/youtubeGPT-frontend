@@ -47,15 +47,6 @@ interface Message {
     created_at: Date;
 }
 
-// const embedUrl = (vidId: string | undefined) => {
-//     // https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1&origin=http://example.com
-//     return `https://www.youtube.com/embed/${vidId}?autoplay=1&origin=http://localhost:5173?enablejsapi=1?rel=0`;
-// };
-
-const toSecond = (timestamp: string): number => {
-    return 0;
-};
-
 const componentDecorator = (href: string, text: string, key: number) => (
     <a
         href={href}
@@ -351,7 +342,7 @@ export default function ChatroomPage() {
                                 </h2>
                                 <div className="space-y-4">
                                     <Markdown remarkPlugins={[remarkGfm]}>
-                                        {videoInfo?.summary.replace("\n", "")}
+                                        {videoInfo?.summary}
                                     </Markdown>
                                 </div>
                             </TabsContent>
@@ -371,7 +362,7 @@ export default function ChatroomPage() {
                             <ScrollArea className="h-full p-4">
                                 <div className="space-y-4 pb-2">
                                     {limitMessages(messages).map(
-                                        (msg: Message) => (
+                                        (msg: Message, idx) => (
                                             <div
                                                 key={msg.id}
                                                 className={`flex ${
@@ -440,33 +431,36 @@ export default function ChatroomPage() {
                                                                     )
                                                                 )}
                                                             </span>
-                                                            {msg.sent_by ===
-                                                                "assistant" && (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-6 w-6"
-                                                                        onClick={() => {
-                                                                            navigator.clipboard.writeText(
-                                                                                msg.content
-                                                                            );
-                                                                            toast.success(
-                                                                                "Copied"
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        <Copy className="h-3 w-3" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-6 w-6"
-                                                                    >
-                                                                        <RotateCcw className="h-3 w-3" />
-                                                                    </Button>
-                                                                </div>
-                                                            )}
+                                                            <div className="flex items-center gap-1">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6"
+                                                                    onClick={() => {
+                                                                        navigator.clipboard.writeText(
+                                                                            msg.content
+                                                                        );
+                                                                        toast.success(
+                                                                            "Copied"
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <Copy className="h-3 w-3" />
+                                                                </Button>
+                                                                {msg.sent_by ===
+                                                                    "bot" &&
+                                                                    idx ===
+                                                                        messages.length -
+                                                                            1 && (
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-6 w-6"
+                                                                        >
+                                                                            <RotateCcw className="h-3 w-3" />
+                                                                        </Button>
+                                                                    )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
