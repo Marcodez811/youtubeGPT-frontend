@@ -18,7 +18,7 @@ export const HeroSection = ({ scrollToMain }: HeroSectionType) => {
                         </div>
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white">
                             Learn Smarter with{" "}
-                            <span className="text-red-600">YoutubeGPT</span>
+                            <span className="text-red-600">YouTubeGPT</span>
                         </h1>
                         <p className="text-lg text-slate-700 dark:text-slate-300 max-w-xl">
                             Your personal AI tutor that helps you understand and
@@ -52,7 +52,7 @@ export const HeroSection = ({ scrollToMain }: HeroSectionType) => {
                             </div>
                             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 border border-slate-200 dark:border-slate-700">
                                 <img
-                                    src="/placeholder.svg?height=300&width=400"
+                                    src="interface.png?height=300&width=400"
                                     alt="YoutubeGPT Interface"
                                     className="rounded-lg w-full"
                                 />

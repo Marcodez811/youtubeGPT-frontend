@@ -26,7 +26,7 @@ export default function App() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="font-poppins min-h-screen flex flex-col">
             {/* Hero Section */}
             <HeroSection scrollToMain={scrollToMain} />
             {/* Main Content */}

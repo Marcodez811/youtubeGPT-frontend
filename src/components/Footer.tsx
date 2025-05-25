@@ -9,7 +9,7 @@ export const Footer = () => {
                     <div className="space-y-4">
                         <h3 className="text-xl font-bold flex items-center gap-2">
                             <Youtube className="h-5 w-5 text-red-500" />
-                            YoutubeGPT
+                            YouTubeGPT
                         </h3>
                         <p className="text-slate-400">
                             Your AI learning companion for educational YouTube
@@ -47,7 +47,7 @@ export const Footer = () => {
 
                 <div className="border-t border-slate-800 mt-8 pt-8 flex flex-col gap-4 justify-center items-center">
                     <p className="text-slate-400 text-sm">
-                        © {new Date().getFullYear()} YoutubeGPT. All rights
+                        © {new Date().getFullYear()} YouTubeGPT. All rights
                         reserved.
                     </p>
                     <div className="mt-4 md:mt-0">

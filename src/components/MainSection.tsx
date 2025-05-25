@@ -10,8 +10,6 @@ import { PlaySquare, Youtube } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
-// import { Switch } from "@/components/ui/switch";
-// import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import axios from "axios";
@@ -81,12 +79,9 @@ const isImageValid = async (url: string): Promise<boolean> => {
 
 export const MainSection = ({ mainRef }: MainSectionType) => {
     const [videoUrl, setVideoUrl] = useState("");
-    // const [enhance, setEnhance] = useState(true);
     const [thumbnail, setThumbnail] = useState("");
     const [videoName, setVideoName] = useState("Fetching Video");
     const [loading, setLoading] = useState(false);
-    const [typed, setTyped] = useState("");
-    // const [playlistUrl, setPlaylistUrl] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -119,7 +114,7 @@ export const MainSection = ({ mainRef }: MainSectionType) => {
                 <CardHeader className="text-center rounded-t-lg">
                     <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
                         <Youtube className="h-6 w-6 text-red-600" />
-                        YoutubeGPT
+                        YouTubeGPT
                     </CardTitle>
                     <CardDescription className="text-lg">
                         Create a chatroom to discuss educational YouTube content
